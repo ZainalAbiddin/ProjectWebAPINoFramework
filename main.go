@@ -1,3 +1,43 @@
+/*
+
+Field Data Type
+ID (PK) Numeric
+Name String
+Age Integer
+
+Soal 1
+Functions required:
+Function Register Student
+Endpoint POST http://{host}:{port}/student
+Description Register student into the system
+Payload { “id”: 1, name: “budi”, age: 5 }
+
+Soal 2
+Function Update Student
+Endpoint PUT http://{host}:{port}/student/{id}
+Description Update student by ID
+Payload { “name: “budi kurniawan” }
+
+Soal 3
+Function Get Student
+Endpoint GET http://{host}:{port}/student/{id}
+Description Get student by ID
+
+Soal 4
+Function Delete Student
+Endpoint DELETE http://{host}:{port}/student/{id}
+Description Delete student by ID
+*/
+
+/*
+kekurangan file ini
+1. Saya belum menemukan cara untuk tidak menggunakan DBSM beserta package pembantu dalam relation mapping seperti GORM
+untuk membuat database dan field ID sebagai primary key.
+2. Pada documentation net/http *URl saya tidak menemukan cara Id menjadi Param sehingga dapat dipanggil lewat students/:id
+seperti gin-gonic. Maka yang saya gunakan hanya sebatas url.query.
+3. Saya minta maaf kesalahan - kesalahan yang saya tidak sadari.
+*/
+
 package main
 
 import (
@@ -36,7 +76,7 @@ func main() {
 		pesan := []byte(`{"pesan":"server dijalankan"}`)
 		SettingJSONWR(wr, pesan, http.StatusOK)
 	})
-	// Get Request Student
+	// Create Fake Database/ Get Student
 	http.HandleFunc("/get-students", func(wr http.ResponseWriter, rq *http.Request) {
 		if rq.Method != "GET" {
 			pesan := []byte(`{"pesan":"invalid http method"}`)
@@ -124,7 +164,7 @@ func main() {
 
 	})
 
-	// Get Data Soal 3 = localhost:8080/student?id=2
+	// Get Data Soal 3 = localhost:8080/get-student?id=2
 	http.HandleFunc("/get-student", func(wr http.ResponseWriter, rq *http.Request) {
 		if rq.Method != "GET" {
 			pesan := []byte(`{"pesan":"invalid error http method"}`)
