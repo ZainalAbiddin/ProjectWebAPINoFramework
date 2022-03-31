@@ -46,6 +46,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 )
 
 type Student struct {
@@ -120,14 +121,28 @@ func main() {
 		pesan := []byte(`{"pesan":"success create data student"}`)
 		SettingJSONWR(wr, pesan, http.StatusCreated)
 	})
-	// Update Data Soal 2 = localhost:8080/put-student?id=2
-	http.HandleFunc("/put-students", func(wr http.ResponseWriter, rq *http.Request) {
+	// Update Data Soal 2 = localhost:8080/put-student/(angka id)
+	http.HandleFunc("/put-student/", func(wr http.ResponseWriter, rq *http.Request) {
 		if rq.Method != "PUT" {
 			pesan := []byte(`{"pesan":"invalid error http method"}`)
 			SettingJSONWR(wr, pesan, http.StatusMethodNotAllowed)
 			return
 		}
-		id := rq.URL.Query()["id"][0]
+		// metode query
+		// if _, ok := rq.URL.Query()["id"]; !ok {
+		// 	pesan := []byte(`{"pesan":"membutuhkan id student"}`)
+		// 	SettingJSONWR(wr, pesan, http.StatusBadRequest)
+		// 	return
+		// }
+
+		// metode params
+		params := strings.Split(rq.URL.String(), "/")
+		if len(params) != 3 {
+			pesan := []byte(`{"pesan":"error penulisan id di URL"}`)
+			SettingJSONWR(wr, pesan, http.StatusOK)
+			return
+		}
+		id := params[2]
 		student, ok := database[id]
 		if !ok {
 			pesan := []byte(`{"pesan":"data student tak ditemukan"}`)
@@ -164,20 +179,27 @@ func main() {
 
 	})
 
-	// Get Data Soal 3 = localhost:8080/get-student?id=2
-	http.HandleFunc("/get-student", func(wr http.ResponseWriter, rq *http.Request) {
+	// Get Data Soal 3 = localhost:8080/student/(angka id)
+	http.HandleFunc("/student/", func(wr http.ResponseWriter, rq *http.Request) {
 		if rq.Method != "GET" {
 			pesan := []byte(`{"pesan":"invalid error http method"}`)
 			SettingJSONWR(wr, pesan, http.StatusMethodNotAllowed)
 		}
+		// metode query
+		// if _, ok := rq.URL.Query()["id"]; !ok {
+		// 	pesan := []byte(`{"pesan":"membutuhkan id student"}`)
+		// 	SettingJSONWR(wr, pesan, http.StatusBadRequest)
+		// 	return
+		// }
 
-		if _, ok := rq.URL.Query()["id"]; !ok {
-			pesan := []byte(`{"pesan":"membutuhkan id student"}`)
-			SettingJSONWR(wr, pesan, http.StatusBadRequest)
+		// metode params
+		params := strings.Split(rq.URL.String(), "/")
+		if len(params) != 3 {
+			pesan := []byte(`{"pesan":"error penulisan id di URL"}`)
+			SettingJSONWR(wr, pesan, http.StatusOK)
 			return
 		}
-
-		id := rq.URL.Query()["id"][0]
+		id := params[2]
 		student, ok := database[id]
 		if !ok {
 			pesan := []byte(`{"pesan":"data student tak ditemukan"}`)
@@ -194,21 +216,29 @@ func main() {
 		SettingJSONWR(wr, studentJSON, http.StatusOK)
 	})
 
-	// Delete Data Soal 4 localhost:8080/delete-student?id=2
-	http.HandleFunc("/delete-student", func(wr http.ResponseWriter, rq *http.Request) {
+	// Delete Data Soal 4 localhost:8080/delete-student/(angka id)
+	http.HandleFunc("/delete-student/", func(wr http.ResponseWriter, rq *http.Request) {
 		if rq.Method != "DELETE" {
 			pesan := []byte(`{"pesan":"invalid error http method"}`)
 			SettingJSONWR(wr, pesan, http.StatusMethodNotAllowed)
 
 		}
 
-		if _, ok := rq.URL.Query()["id"]; !ok {
-			pesan := []byte(`{"pesan":"membutuhkan id student"}`)
-			SettingJSONWR(wr, pesan, http.StatusBadRequest)
+		// metode query
+		// if _, ok := rq.URL.Query()["id"]; !ok {
+		// 	pesan := []byte(`{"pesan":"membutuhkan id student"}`)
+		// 	SettingJSONWR(wr, pesan, http.StatusBadRequest)
+		// 	return
+		// }
+
+		// metode params
+		params := strings.Split(rq.URL.String(), "/")
+		if len(params) != 3 {
+			pesan := []byte(`{"pesan":"error penulisan id di URL"}`)
+			SettingJSONWR(wr, pesan, http.StatusOK)
 			return
 		}
-
-		id := rq.URL.Query()["id"][0]
+		id := params[2]
 		student, ok := database[id]
 		if !ok {
 			pesan := []byte(`{"pesan":"data student tak ditemukan"}`)
