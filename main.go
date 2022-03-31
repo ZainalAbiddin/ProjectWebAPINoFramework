@@ -252,30 +252,6 @@ func DeleteStudent(wr http.ResponseWriter, rq *http.Request) {
 4. Your code will be evaluated for both functional and non-functional such as code quality.
 5. It’s nice if you have test your code, and if you do please include your test files in your project.
 6. We are really interested in clean and maintanable codebase, so please solve the problem keeping this in mind.
-
-Field Data Type
-ID (PK) Numeric
-Name String
-Age Integer
-
-Functions required:
-Function Register Student
-Endpoint POST http://{host}:{port}/student
-Description Register student into the system
-Payload { “id”: 1, name: “budi”, age: 5 }
-
-Function Update Student
-Endpoint PUT http://{host}:{port}/student/{id}
-Description Update student by ID
-Payload { “name: “budi kurniawan” }
-
-Function Get Student
-Endpoint GET http://{host}:{port}/student/{id}
-Description Get student by ID
-
-Function Delete Student
-Endpoint DELETE http://{host}:{port}/student/{id}
-Description Delete student by ID
 */
 
 /*
