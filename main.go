@@ -31,11 +31,7 @@ Description Delete student by ID
 
 /*
 kekurangan file ini
-1. Saya belum menemukan cara untuk tidak menggunakan DBSM beserta package pembantu dalam relation mapping seperti GORM
-untuk membuat database dan field ID sebagai primary key.
-2. Pada documentation net/http *URl saya tidak menemukan cara Id menjadi Param sehingga dapat dipanggil lewat students/:id
-seperti gin-gonic. Maka yang saya gunakan hanya sebatas url.query.
-3. Saya minta maaf kesalahan - kesalahan yang saya tidak sadari.
+1. Belum menemukan ID menjadi primary key tanpa menggunakan tag gorm dan fitur mysql
 */
 
 package main
@@ -59,202 +55,21 @@ var (
 	database = make(map[string]Student)
 )
 
-func SettingJSONWR(wr http.ResponseWriter, pesan []byte, httpCode int) {
-	wr.Header().Set("Content-type", "application/json")
-	wr.WriteHeader(httpCode)
-	wr.Write(pesan)
-}
 func main() {
-
 	database["1"] = Student{
 		ID:   1,
 		Name: "Budi",
 		Age:  5,
 	}
-
 	// initial server - handler
 	http.HandleFunc("/", func(wr http.ResponseWriter, rq *http.Request) {
 		pesan := []byte(`{"pesan":"server dijalankan"}`)
 		SettingJSONWR(wr, pesan, http.StatusOK)
 	})
 	// Create Fake Database/ Get Student
-	http.HandleFunc("/get-students", func(wr http.ResponseWriter, rq *http.Request) {
-		if rq.Method != "GET" {
-			pesan := []byte(`{"pesan":"invalid http method"}`)
-			SettingJSONWR(wr, pesan, http.StatusMethodNotAllowed)
-			return
-		}
-
-		var students []Student
-
-		for _, student := range database {
-			students = append(students, student)
-		}
-
-		studentJSON, err := json.Marshal(&students)
-		if err != nil {
-			pesan := []byte(`{"pesan":"error ketika parsing data"}`)
-			SettingJSONWR(wr, pesan, http.StatusInternalServerError)
-			return
-		}
-		SettingJSONWR(wr, studentJSON, http.StatusOK)
-	})
-	// POST Student (Soal 1) = localhost:8080/post-students
-	http.HandleFunc("/post-students", func(wr http.ResponseWriter, rq *http.Request) {
-		if rq.Method != "POST" {
-			pesan := []byte(`{"pesan":"invalid http method"}`)
-			SettingJSONWR(wr, pesan, http.StatusMethodNotAllowed)
-			return
-		}
-		var student Student
-		Payload := rq.Body
-		defer rq.Body.Close()
-		err := json.NewDecoder(Payload).Decode(&student)
-		if err != nil {
-			pesan := []byte(`{"pesan":"error ketika parsing data"}`)
-			SettingJSONWR(wr, pesan, http.StatusInternalServerError)
-			return
-		}
-		studentID := strconv.Itoa(student.ID)
-		database[studentID] = student
-
-		pesan := []byte(`{"pesan":"success create data student"}`)
-		SettingJSONWR(wr, pesan, http.StatusCreated)
-	})
-	// Update Data Soal 2 = localhost:8080/put-student/(angka id)
-	http.HandleFunc("/put-student/", func(wr http.ResponseWriter, rq *http.Request) {
-		if rq.Method != "PUT" {
-			pesan := []byte(`{"pesan":"invalid error http method"}`)
-			SettingJSONWR(wr, pesan, http.StatusMethodNotAllowed)
-			return
-		}
-		// metode query
-		// if _, ok := rq.URL.Query()["id"]; !ok {
-		// 	pesan := []byte(`{"pesan":"membutuhkan id student"}`)
-		// 	SettingJSONWR(wr, pesan, http.StatusBadRequest)
-		// 	return
-		// }
-
-		// metode params
-		params := strings.Split(rq.URL.String(), "/")
-		if len(params) != 3 {
-			pesan := []byte(`{"pesan":"error penulisan id di URL"}`)
-			SettingJSONWR(wr, pesan, http.StatusOK)
-			return
-		}
-		id := params[2]
-		student, ok := database[id]
-		if !ok {
-			pesan := []byte(`{"pesan":"data student tak ditemukan"}`)
-			SettingJSONWR(wr, pesan, http.StatusOK)
-			return
-		}
-
-		var newstudent Student
-
-		payload := rq.Body
-
-		defer rq.Body.Close()
-
-		err := json.NewDecoder(payload).Decode(&newstudent)
-		if err != nil {
-			pesan := []byte(`{"pesan":"error ketika parsing data"}`)
-			SettingJSONWR(wr, pesan, http.StatusInternalServerError)
-			return
-		}
-
-		student.Name = newstudent.Name
-		student.Age = newstudent.Age
-
-		studentID := strconv.Itoa(student.ID)
-		database[studentID] = student
-
-		studentJSON, err := json.Marshal(&student)
-		if err != nil {
-			pesan := []byte(`{"pesan":"error ketika parsing data"}`)
-			SettingJSONWR(wr, pesan, http.StatusInternalServerError)
-			return
-		}
-		SettingJSONWR(wr, studentJSON, http.StatusOK)
-
-	})
-
-	// Get Data Soal 3 = localhost:8080/student/(angka id)
-	http.HandleFunc("/student/", func(wr http.ResponseWriter, rq *http.Request) {
-		if rq.Method != "GET" {
-			pesan := []byte(`{"pesan":"invalid error http method"}`)
-			SettingJSONWR(wr, pesan, http.StatusMethodNotAllowed)
-		}
-		// metode query
-		// if _, ok := rq.URL.Query()["id"]; !ok {
-		// 	pesan := []byte(`{"pesan":"membutuhkan id student"}`)
-		// 	SettingJSONWR(wr, pesan, http.StatusBadRequest)
-		// 	return
-		// }
-
-		// metode params
-		params := strings.Split(rq.URL.String(), "/")
-		if len(params) != 3 {
-			pesan := []byte(`{"pesan":"error penulisan id di URL"}`)
-			SettingJSONWR(wr, pesan, http.StatusOK)
-			return
-		}
-		id := params[2]
-		student, ok := database[id]
-		if !ok {
-			pesan := []byte(`{"pesan":"data student tak ditemukan"}`)
-			SettingJSONWR(wr, pesan, http.StatusOK)
-			return
-		}
-
-		studentJSON, err := json.Marshal(&student)
-		if err != nil {
-			pesan := []byte(`{"pesan":"error ketika parsing data"}`)
-			SettingJSONWR(wr, pesan, http.StatusInternalServerError)
-			return
-		}
-		SettingJSONWR(wr, studentJSON, http.StatusOK)
-	})
-
-	// Delete Data Soal 4 localhost:8080/delete-student/(angka id)
-	http.HandleFunc("/delete-student/", func(wr http.ResponseWriter, rq *http.Request) {
-		if rq.Method != "DELETE" {
-			pesan := []byte(`{"pesan":"invalid error http method"}`)
-			SettingJSONWR(wr, pesan, http.StatusMethodNotAllowed)
-
-		}
-
-		// metode query
-		// if _, ok := rq.URL.Query()["id"]; !ok {
-		// 	pesan := []byte(`{"pesan":"membutuhkan id student"}`)
-		// 	SettingJSONWR(wr, pesan, http.StatusBadRequest)
-		// 	return
-		// }
-
-		// metode params
-		params := strings.Split(rq.URL.String(), "/")
-		if len(params) != 3 {
-			pesan := []byte(`{"pesan":"error penulisan id di URL"}`)
-			SettingJSONWR(wr, pesan, http.StatusOK)
-			return
-		}
-		id := params[2]
-		student, ok := database[id]
-		if !ok {
-			pesan := []byte(`{"pesan":"data student tak ditemukan"}`)
-			SettingJSONWR(wr, pesan, http.StatusOK)
-			return
-		}
-		delete(database, id)
-
-		studentJSON, err := json.Marshal(&student)
-		if err != nil {
-			pesan := []byte(`{"pesan":"error ketika parsing data"}`)
-			SettingJSONWR(wr, pesan, http.StatusInternalServerError)
-			return
-		}
-		SettingJSONWR(wr, studentJSON, http.StatusOK)
-	})
+	http.HandleFunc("/students", GetStudents)
+	// Soal 1(post), Soal 2(put), Soal 3(get by id), Soal 4(delete)
+	http.HandleFunc("/student/", methodStudents)
 
 	// cek error dan rute alamat
 	err := http.ListenAndServe(":8080", nil)
@@ -262,6 +77,172 @@ func main() {
 		fmt.Println(err)
 		os.Exit(1)
 	}
+}
+
+func methodStudents(wr http.ResponseWriter, rq *http.Request) {
+	switch rq.Method {
+	case "GET":
+		GetStudentsByID(wr, rq)
+		return
+	case "POST":
+		PostStudents(wr, rq)
+		return
+	case "PUT":
+		PutStudents(wr, rq)
+		return
+	case "DELETE":
+		DeleteStudent(wr, rq)
+		return
+	default:
+		pesan := []byte(`{"pesan":"invalid http method"}`)
+		SettingJSONWR(wr, pesan, http.StatusMethodNotAllowed)
+		return
+	}
+}
+
+func SettingJSONWR(wr http.ResponseWriter, pesan []byte, httpCode int) {
+	wr.Header().Set("Content-type", "application/json")
+	wr.WriteHeader(httpCode)
+	wr.Write(pesan)
+}
+
+func GetStudents(wr http.ResponseWriter, rq *http.Request) {
+	var students []Student
+	for _, student := range database {
+		students = append(students, student)
+	}
+	studentJSON, err := json.Marshal(&students)
+	if err != nil {
+		pesan := []byte(`{"pesan":"error ketika parsing data"}`)
+		SettingJSONWR(wr, pesan, http.StatusInternalServerError)
+		return
+	}
+	SettingJSONWR(wr, studentJSON, http.StatusOK)
+}
+
+func PostStudents(wr http.ResponseWriter, rq *http.Request) {
+	var student Student
+	Payload := rq.Body
+	defer rq.Body.Close()
+
+	err := json.NewDecoder(Payload).Decode(&student)
+	if err != nil {
+		pesan := []byte(`{"pesan":"error ketika parsing data"}`)
+		SettingJSONWR(wr, pesan, http.StatusInternalServerError)
+		return
+	}
+	studentID := strconv.Itoa(student.ID)
+	database[studentID] = student
+
+	pesan := []byte(`{"pesan":"success create data student"}`)
+	SettingJSONWR(wr, pesan, http.StatusCreated)
+
+	studentJSON, err := json.Marshal(&student)
+	if err != nil {
+		pesan := []byte(`{"pesan":"error ketika parsing data"}`)
+		SettingJSONWR(wr, pesan, http.StatusInternalServerError)
+		return
+	}
+	SettingJSONWR(wr, studentJSON, http.StatusOK)
+}
+
+func PutStudents(wr http.ResponseWriter, rq *http.Request) {
+	// metode params
+	params := strings.Split(rq.URL.String(), "/")
+	if len(params) != 3 {
+		pesan := []byte(`{"pesan":"error penulisan id di URL"}`)
+		SettingJSONWR(wr, pesan, http.StatusOK)
+		return
+	}
+	id := params[2]
+	student, ok := database[id]
+	if !ok {
+		pesan := []byte(`{"pesan":"data student tak ditemukan"}`)
+		SettingJSONWR(wr, pesan, http.StatusOK)
+		return
+	}
+
+	var newstudent Student
+
+	payload := rq.Body
+
+	defer rq.Body.Close()
+
+	err := json.NewDecoder(payload).Decode(&newstudent)
+	if err != nil {
+		pesan := []byte(`{"pesan":"error ketika parsing data"}`)
+		SettingJSONWR(wr, pesan, http.StatusInternalServerError)
+		return
+	}
+
+	student.Name = newstudent.Name
+	student.Age = newstudent.Age
+
+	studentID := strconv.Itoa(student.ID)
+	database[studentID] = student
+
+	studentJSON, err := json.Marshal(&student)
+	if err != nil {
+		pesan := []byte(`{"pesan":"error ketika parsing data"}`)
+		SettingJSONWR(wr, pesan, http.StatusInternalServerError)
+		return
+	}
+	SettingJSONWR(wr, studentJSON, http.StatusOK)
+	pesan := []byte(`{"pesan":"update data berhasil"}`)
+	SettingJSONWR(wr, pesan, http.StatusOK)
+}
+
+func GetStudentsByID(wr http.ResponseWriter, rq *http.Request) {
+	// metode params
+	params := strings.Split(rq.URL.String(), "/")
+	if len(params) != 3 {
+		pesan := []byte(`{"pesan":"error penulisan id di URL"}`)
+		SettingJSONWR(wr, pesan, http.StatusOK)
+		return
+	}
+	id := params[2]
+	student, ok := database[id]
+	if !ok {
+		pesan := []byte(`{"pesan":"data student tak ditemukan"}`)
+		SettingJSONWR(wr, pesan, http.StatusOK)
+		return
+	}
+
+	studentJSON, err := json.Marshal(&student)
+	if err != nil {
+		pesan := []byte(`{"pesan":"error ketika parsing data"}`)
+		SettingJSONWR(wr, pesan, http.StatusInternalServerError)
+		return
+	}
+	SettingJSONWR(wr, studentJSON, http.StatusOK)
+}
+
+func DeleteStudent(wr http.ResponseWriter, rq *http.Request) {
+	// metode params
+	params := strings.Split(rq.URL.String(), "/")
+	if len(params) != 3 {
+		pesan := []byte(`{"pesan":"error penulisan id di URL"}`)
+		SettingJSONWR(wr, pesan, http.StatusOK)
+		return
+	}
+	id := params[2]
+	student, ok := database[id]
+	if !ok {
+		pesan := []byte(`{"pesan":"data student tak ditemukan"}`)
+		SettingJSONWR(wr, pesan, http.StatusOK)
+		return
+	}
+	delete(database, id)
+
+	studentJSON, err := json.Marshal(&student)
+	if err != nil {
+		pesan := []byte(`{"pesan":"error ketika parsing data"}`)
+		SettingJSONWR(wr, pesan, http.StatusInternalServerError)
+		return
+	}
+	SettingJSONWR(wr, studentJSON, http.StatusOK)
+	pesan := []byte(`{"pesan":"delete data berhasil"}`)
+	SettingJSONWR(wr, pesan, http.StatusOK)
 }
 
 /*
@@ -295,4 +276,28 @@ Description Get student by ID
 Function Delete Student
 Endpoint DELETE http://{host}:{port}/student/{id}
 Description Delete student by ID
+*/
+
+/*
+	// metode query
+	// if _, ok := rq.URL.Query()["id"]; !ok {
+	// 	pesan := []byte(`{"pesan":"membutuhkan id student"}`)
+	// 	SettingJSONWR(wr, pesan, http.StatusBadRequest)
+	// 	return
+	// }
+
+	// metode params
+	params := strings.Split(rq.URL.String(), "/")
+	if len(params) != 3 {
+		pesan := []byte(`{"pesan":"error penulisan id di URL"}`)
+		SettingJSONWR(wr, pesan, http.StatusOK)
+		return
+	}
+	id := params[2]
+	student, ok := database[id]
+	if !ok {
+		pesan := []byte(`{"pesan":"data student tak ditemukan"}`)
+		SettingJSONWR(wr, pesan, http.StatusOK)
+		return
+	}
 */
